@@ -1,0 +1,1 @@
+select * from {{ref('reviews_per_comic')}} where customer_review > 10 or customer_review < 0

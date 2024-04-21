@@ -1,0 +1,1 @@
+select * from {{ref('views_per_comic')}} where views < 0

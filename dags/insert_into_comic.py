@@ -15,7 +15,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='xkcd_comics_etl',
+    dag_id='xkcd_comics_extract_and_load',
     default_args=default_args,
     description='Fetch XKCD comics data and insert it into a database',
     schedule_interval='0 12 * * 1,3,5',
@@ -34,8 +34,8 @@ with dag:
         task_id='insert_data',
         postgres_conn_id='postgres',
         sql="""
-        INSERT INTO xkcd.comic (alt, day, img, link, month, news, num, safe_title, title, transcript)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO xkcd.comic (alt, day, img, link, month, news, num, safe_title, title, transcript, year)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (num) DO UPDATE SET
             alt = EXCLUDED.alt,
             day = EXCLUDED.day,
@@ -45,7 +45,8 @@ with dag:
             news = EXCLUDED.news,
             safe_title = EXCLUDED.safe_title,
             title = EXCLUDED.title,
-            transcript = EXCLUDED.transcript;
+            transcript = EXCLUDED.transcript,
+            year = EXCLUDED.year;
     """,
     parameters=[
         "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['alt'] }}",
@@ -57,7 +58,8 @@ with dag:
         "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['num'] }}",
         "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['safe_title'] }}",
         "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['title'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['transcript'] }}"
+        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['transcript'] }}",
+        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['year'] }}"
     ],
         dag=dag,
     )

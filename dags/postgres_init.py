@@ -29,15 +29,16 @@ with dag:
         postgres_conn_id='postgres',
         sql= """CREATE TABLE if not exists xkcd.comic (
             alt TEXT,
-            day TEXT,
+            day TEXT NOT NULL,
             img TEXT,
-            link text,
-            month text,
-            news text,
-            num integer primary key,
-            safe_title text,
-            title TEXT,
-            transcript text,
+            link TEXT,
+            month TEXT NOT NULL,
+            news TEXT,
+            num INTEGER PRIMARY KEY,
+            safe_title TEXT,
+            title TEXT NOT NULL,
+            transcript TEXT,
+            year TEXT NOT NULL,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
 

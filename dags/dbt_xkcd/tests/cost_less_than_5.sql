@@ -1,0 +1,1 @@
+select * from {{ref('cost_per_comic')}} where cost < 5
