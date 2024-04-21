@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
-# Define the DAG schedule and default arguments
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -13,18 +12,17 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# Create the DAG
 dag = DAG(
-    'dbt_run',
+    'dbt_init',
     default_args=default_args,
     schedule_interval=None,
 )
 
-# Define the task that runs the dbt run command
 with dag:
-    dbt_run = BashOperator(
-    task_id='dbt_run',
-    bash_command='cd /opt/airflow/dags/dbt_xkcd && dbt run',
-    dag=dag,
+    dbt_init = BashOperator(
+        task_id='dbt_init',
+        bash_command='cd /home/airflow && mkdir -p .dbt && \
+            cp /opt/airflow/dags/.dbt/profiles.yml /home/airflow/.dbt/',
     )
-    dbt_run
+
+    dbt_init
