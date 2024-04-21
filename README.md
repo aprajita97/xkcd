@@ -11,7 +11,7 @@ In this repository, we fetch XKCD's comics data and insert it into Postgres data
 2. Create virtual enviroment 
     - python3 -m venv env
     - source env/bin/activate
-    Note: If you are creating virtual environment with another name, modify .gitignore to have it
+Note: If you are creating virtual environment with another name, modify .gitignore to have it
 3. Perform the following commands
     - docker-compose up airflow-init 
     - docker-compose up
