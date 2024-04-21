@@ -3,6 +3,7 @@ from airflow.utils.dates import days_ago
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.postgres_operator import PostgresOperator
+from airflow.operators.bash_operator import BashOperator
 from fetch_api import _fetch_comic_of_the_day
 
 default_args = {
@@ -15,23 +16,20 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='xkcd_comics_extract_and_load',
+    dag_id='dag_xkcd_etl',
     default_args=default_args,
-    description='Fetch XKCD comics data and insert it into a database',
     schedule_interval='0 12 * * 1,3,5',
 )
 with dag:
-    fetch_comics_task = PythonOperator(
-        task_id='fetch_comics_task',
+    task_fetch_comics = PythonOperator(
+        task_id='task_fetch_comics',
         python_callable=_fetch_comic_of_the_day,
-        dag=dag,
         provide_context=True,
         do_xcom_push=True,
 
     )
-    
     insert_data = PostgresOperator(
-        task_id='insert_data',
+        task_id='task_insert_data',
         postgres_conn_id='postgres',
         sql="""
         INSERT INTO xkcd.comic (alt, day, img, link, month, news, num, safe_title, title, transcript, year)
@@ -49,19 +47,21 @@ with dag:
             year = EXCLUDED.year;
     """,
     parameters=[
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['alt'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['day'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['img'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['link'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['month'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['news'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['num'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['safe_title'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['title'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['transcript'] }}",
-        "{{ task_instance.xcom_pull(task_ids='fetch_comics_task')['year'] }}"
-    ],
-        dag=dag,
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['alt'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['day'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['img'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['link'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['month'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['news'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['num'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['safe_title'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['title'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['transcript'] }}",
+        "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['year'] }}"],
+    )
+    dbt_run = BashOperator(
+        task_id='task_dbt_run',
+        bash_command='cd /opt/airflow/dags/dbt_xkcd && dbt run',
     )
 
-    fetch_comics_task >> insert_data
+    task_fetch_comics >> insert_data >> dbt_run

@@ -2,6 +2,7 @@ from datetime import timedelta
 from airflow.utils.dates import days_ago
 from airflow import DAG
 from airflow.operators.postgres_operator import PostgresOperator
+from airflow.operators.bash_operator import BashOperator
 
 default_args = {
     'catchup': False,
@@ -13,15 +14,19 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='create_schema_xkcd',
+    dag_id='dag_setup',
     default_args=default_args,
-    description='Creates XKCD schema',
     schedule_interval=None,
 )
 
 with dag:
+    dbt_initialization = BashOperator(
+        task_id='task_dbt_initialization',
+        bash_command='cd /home/airflow && mkdir -p .dbt && \
+            cp /opt/airflow/dags/.dbt/profiles.yml /home/airflow/.dbt/',
+    )
     create_schema = PostgresOperator(
-        task_id='create_schema_xkcd',
+        task_id='task_create_schema_xkcd',
         postgres_conn_id='postgres',
         sql= """Create schema if not exists xkcd;""")
     create_table = PostgresOperator(
@@ -64,5 +69,9 @@ with dag:
                 END IF;
             END $$;
             """)
+    dbt_run = BashOperator(
+        task_id='task_dbt_run',
+        bash_command='cd /opt/airflow/dags/dbt_xkcd && dbt run',
+    )
 
-    create_schema >> create_table
+    dbt_initialization >> create_schema >> create_table >> dbt_run
