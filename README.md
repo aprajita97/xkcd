@@ -1,8 +1,5 @@
 # XKCD Data Pipeline
 
-## Table of Contents
-1. [](#)
-
 ## Introduction
 This project aims to extract, load, and transform data from the XKCD webcomic API into a database, providing insights into the number of views, cost of creation, and customer reviews for each comic.
 
