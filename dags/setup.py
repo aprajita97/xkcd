@@ -16,7 +16,7 @@ default_args = {
 dag = DAG(
     dag_id='dag_setup',
     default_args=default_args,
-    schedule_interval=None,
+    schedule_interval='@once',
 )
 
 with dag:
