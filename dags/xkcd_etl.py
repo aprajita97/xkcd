@@ -15,7 +15,7 @@ default_args = {
     'catchup': False,
     'depends_on_past': False,
     'owner': 'airflow',
-    'retries': 5,
+    'retries': 7,
     'retry_delay': timedelta(minutes=120),
     'start_date': start_date_eastern
 }
