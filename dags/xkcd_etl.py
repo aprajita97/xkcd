@@ -1,3 +1,4 @@
+import pendulum
 from datetime import timedelta
 from airflow.utils.dates import days_ago
 from airflow import DAG
@@ -6,13 +7,17 @@ from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators.bash_operator import BashOperator
 from data_collection.fetch_api import _fetch_comic_of_the_day
 
+local_tz = pendulum.timezone('US/Eastern')
+now_eastern = pendulum.now(tz=local_tz)
+start_date_eastern = now_eastern - timedelta(days=1)
+
 default_args = {
     'catchup': False,
     'depends_on_past': False,
     'owner': 'airflow',
     'retries': 5,
     'retry_delay': timedelta(minutes=120),
-    'start_date': days_ago(1)
+    'start_date': start_date_eastern
 }
 
 dag = DAG(
