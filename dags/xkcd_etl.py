@@ -18,7 +18,7 @@ default_args = {
 dag = DAG(
     dag_id='dag_xkcd_etl',
     default_args=default_args,
-    schedule_interval='0 12 * * 1,3,5',
+    schedule_interval='0 10 * * 1,3,5',
 )
 with dag:
     task_fetch_comics = PythonOperator(
@@ -26,7 +26,6 @@ with dag:
         python_callable=_fetch_comic_of_the_day,
         provide_context=True,
         do_xcom_push=True,
-
     )
     insert_data = PostgresOperator(
         task_id='task_insert_data',
