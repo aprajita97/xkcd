@@ -1,6 +1,5 @@
 import pendulum
 from datetime import timedelta
-from airflow.utils.dates import days_ago
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.postgres_operator import PostgresOperator
@@ -9,7 +8,7 @@ from data_collection.fetch_api import _fetch_comic_of_the_day
 
 local_tz = pendulum.timezone('US/Eastern')
 now_eastern = pendulum.now(tz=local_tz)
-start_date_eastern = now_eastern - timedelta(days=1)
+start_date_eastern = now_eastern - timedelta(days=1) # equivalent to days_ago(1)
 
 default_args = {
     'catchup': False,
@@ -63,9 +62,5 @@ with dag:
         "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['transcript'] }}",
         "{{ task_instance.xcom_pull(task_ids='task_fetch_comics')['year'] }}"],
     )
-    dbt_run = BashOperator(
-        task_id='task_dbt_run',
-        bash_command='cd /opt/airflow/dags/dbt_xkcd && dbt run',
-    )
 
-    task_fetch_comics >> insert_data >> dbt_run
+    task_fetch_comics >> insert_data
